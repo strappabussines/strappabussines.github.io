@@ -1,0 +1,109 @@
+<<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Control de Expensas - Barrio Privado</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="alert-container"></div>
+  <header>
+    <h1>🏘️ Control de Expensas</h1>
+    <nav>
+      <button onclick="showSection('dashboard')" class="nav-btn">Dashboard</button>
+      <button onclick="showSection('owners')" class="nav-btn">Propietarios</button>
+      <button onclick="showSection('payments')" class="nav-btn">Pagos</button>
+      <button onclick="showSection('reports')" class="nav-btn">Reportes</button>
+    </nav>
+  </header>
+  <main>
+    <!-- Dashboard -->
+    <section id="dashboard-section" class="section active">
+      <h2>Dashboard Principal</h2>
+      <form id="dashboard-month-form" class="inline-form">
+        <label for="dashboard-month">Mes:</label>
+        <input type="month" id="dashboard-month" value="">
+        <button type="submit">Filtrar</button>
+      </form>
+      <div class="stats">
+        <div class="stat" id="stat-owners">Propietarios: 0</div>
+        <div class="stat" id="stat-pending">Pagos Pendientes: 0</div>
+        <div class="stat" id="stat-collected">Recaudado: $0</div>
+        <div class="stat" id="stat-overdue">Vencidos: 0</div>
+      </div>
+      <h3>Resumen de Cuentas</h3>
+      <div id="dashboard-table"></div>
+    </section>
+    
+    <!-- Propietarios -->
+    <section id="owners-section" class="section">
+      <h2>Gestión de Propietarios</h2>
+      <form id="owner-form">
+        <input type="text" id="owner-lot" placeholder="Lote" required>
+        <input type="text" id="owner-name" placeholder="Apellido y nombre" required>
+        <input type="email" id="owner-email" placeholder="Correo electrónico" required>
+        <input type="tel" id="owner-phone" placeholder="Teléfono" required>
+        <input type="tel" id="owner-alt-phone" placeholder="Teléfono alternativo">
+        <input type="text" id="owner-id" placeholder="Identificado">
+        <button type="submit">Agregar Propietario</button>
+      </form>
+      <h3>Listado de Propietarios</h3>
+      <div id="owners-table"></div>
+    </section>
+    
+    <!-- Pagos -->
+    <section id="payments-section" class="section">
+      <h2>Registro de Pagos</h2>
+      <form id="payment-form">
+        <select id="payment-owner" required>
+          <option value="">Seleccione propietario</option>
+        </select>
+        <button type="button" id="show-debt-btn" class="debt-btn">Ver Deuda Anual</button>
+      </form>
+      
+      <!-- Panel de deuda anual -->
+      <div id="debt-panel" class="debt-panel" style="display: none;">
+        <h3>Deuda Anual del Lote</h3>
+        <div id="debt-details"></div>
+        <form id="multiple-payment-form">
+          <input type="number" id="payment-amount" placeholder="Monto por mes" min="1" required>
+          <select id="payment-method" required>
+            <option value="">Método de pago</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Transferencia">Transferencia</option>
+            <option value="Tarjeta">Tarjeta</option>
+          </select>
+          <input type="date" id="payment-date" placeholder="Fecha del pago">
+          <input type="text" id="payment-receipt" placeholder="Comprobante N°" maxlength="30" required>
+          <button type="submit">Registrar Pagos Seleccionados</button>
+        </form>
+      </div>
+      
+      <button id="download-pdf-btn" class="pdf-btn">📄 Convertir a PDF</button>
+      <h3>Pagos Registrados</h3>
+      <div id="payments-table"></div>
+    </section>
+    
+    <!-- Reportes -->
+    <section id="reports-section" class="section">
+      <h2>Reportes</h2>
+      <form id="report-form">
+        <input type="month" id="report-month" required>
+        <input type="text" id="report-lot" placeholder="Buscar por Lote (opcional)">
+        <button type="submit">Ver Reporte</button>
+      </form>
+      <button id="download-report-pdf-btn" class="pdf-btn">📄 Convertir a PDF</button>
+      <div id="report-result"></div>
+    </section>
+  </main>
+  
+  <footer>
+    <p>&copy; 2025 Barrio Privado - Control de Expensas</p>
+  </footer>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

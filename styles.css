@@ -1,0 +1,299 @@
+:root {
+  --primary: #2d6cdf;
+  --secondary: #f5f7fa;
+  --success: #4caf50;
+  --error: #e53935;
+  --warning: #ffb300;
+  --text: #222;
+  --bg: #fff;
+  --radius: 10px;
+  --shadow: 0 2px 8px rgba(44, 108, 223, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--secondary);
+  color: var(--text);
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  background: var(--primary);
+  color: #fff;
+  padding: 1rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: var(--shadow);
+}
+
+header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  letter-spacing: 1px;
+}
+
+nav {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  background: #fff;
+  color: var(--primary);
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: var(--radius);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-btn:hover, .nav-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border: 1px solid #fff;
+  transform: translateY(-2px);
+}
+
+main {
+  flex: 1;
+  padding: 2rem 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.section {
+  display: none;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.section.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat {
+  background: var(--bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  text-align: center;
+  font-weight: bold;
+  color: var(--primary);
+  transition: transform 0.2s;
+  border-left: 4px solid var(--primary);
+}
+
+.stat:hover {
+  transform: translateY(-5px);
+}
+
+form {
+  background: var(--bg);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  align-items: end;
+}
+
+.inline-form {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  margin-bottom: 1.5rem;
+}
+
+form input, form select {
+  padding: 0.7rem;
+  border-radius: var(--radius);
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+form input:focus, form select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(45, 108, 223, 0.1);
+}
+
+form button {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: var(--radius);
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+form button:hover {
+  background: #174a8b;
+}
+
+/* Estilos para el panel de deuda */
+.debt-panel {
+  background: var(--bg);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--warning);
+}
+
+.debt-btn {
+  background: var(--warning);
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: var(--radius);
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.debt-btn:hover {
+  background: #f57c00;
+}
+
+.debt-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.month-card {
+  background: #f8faff;
+  border: 2px solid #ddd;
+  border-radius: var(--radius);
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.month-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+.month-card.paid {
+  background: #e8f5e8;
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.month-card.pending {
+  background: #fff3e0;
+  border-color: var(--warning);
+  color: var(--warning);
+}
+
+.month-card.selected {
+  background: #e3f2fd;
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.month-card input[type="checkbox"] {
+  margin-right: 0.5rem;
+  transform: scale(1.2);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+th, td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+th {
+  background: var(--primary);
+  color: #fff;
+  font-weight: bold;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover {
+  background: #f8faff;
+}
+
+table input[type="text"], 
+table input[type="email"], 
+table input[type="tel"], 
+table input[type="date"] {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  border: 1px solid #ccc;
+  background: #f7faff;
+  font-size: 0.9rem;
+}
+
+.delete-btn {
+  background: var(--error);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.delete-btn:hover {
+  background: #b71c1c;
+}
+
+.edit-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.9rem;
+}
