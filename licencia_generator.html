@@ -2,170 +2,113 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Generador de Licencia</title>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<title>Generador Licencia de Conducir</title>
 <style>
-  #preview-container {
-    position: relative;
-    display: inline-block;
-    max-width: 100%;
-  }
-  #license-template {
-    width: 100%;
-    display: block;
-  }
-  .overlay-text {
-    position: absolute;
-    font-size: 2vw;
-    font-weight: bold;
-    color: black;
-    white-space: nowrap;
-  }
-  #foto {
-    position: absolute;
-    object-fit: cover;
-    border: 2px solid #000;
-  }
-  #firma {
-    position: absolute;
-    object-fit: contain;
-    background: transparent;
-  }
+    body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
+    .formulario { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+    .canvas-container { text-align: center; }
+    canvas { border: 1px solid #ccc; }
 </style>
 </head>
-<body class="p-4">
+<body>
 
-<div class="container">
-  <h2 class="mb-4">Generador de Licencia Nacional de Conducir</h2>
+<h2>Generador Licencia de Conducir</h2>
 
-  <!-- Subir plantilla -->
-  <div class="mb-3">
-    <label class="form-label">Subir plantilla de licencia</label>
-    <input type="file" id="template-upload" accept="image/*" class="form-control">
-  </div>
+<div class="formulario">
+    <label>Plantilla Licencia: <input type="file" id="template" accept="image/*"></label><br><br>
+    <label>Selfie: <input type="file" id="selfie" accept="image/*"></label><br><br>
+    <label>Apellido: <input type="text" id="apellido"></label><br><br>
+    <label>Nombre: <input type="text" id="nombre"></label><br><br>
+    <label>Domicilio: <input type="text" id="domicilio"></label><br><br>
+    <label>Fecha Nac.: <input type="date" id="fechaNac"></label><br><br>
+    <label>Otorgamiento: <input type="date" id="otorgamiento"></label><br><br>
+    <label>Vencimiento: <input type="date" id="vencimiento"></label><br><br>
+    <label>N° Licencia: <input type="text" id="nLicencia"></label><br><br>
+    <label>Clase: <input type="text" id="clase"></label><br><br>
+    <label>Marca de Agua: <input type="text" id="marcaAgua"></label><br><br>
+    <button onclick="generarLicencia()">Generar Licencia</button>
+    <button onclick="descargar()">Descargar</button>
+</div>
 
-  <!-- Formulario -->
-  <form id="data-form" style="display:none;">
-    <div class="row g-3">
-      <div class="col-md-6">
-        <label class="form-label">Apellido</label>
-        <input type="text" class="form-control" id="apellido">
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Nombre</label>
-        <input type="text" class="form-control" id="nombre">
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Domicilio</label>
-        <input type="text" class="form-control" id="domicilio">
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Fecha de Nacimiento</label>
-        <input type="date" class="form-control" id="fecha-nac">
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Fecha de Otorgamiento</label>
-        <input type="date" class="form-control" id="fecha-otorg">
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Fecha de Vencimiento</label>
-        <input type="date" class="form-control" id="fecha-venc">
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Número de Licencia</label>
-        <input type="text" class="form-control" id="num-licencia">
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Clase</label>
-        <input type="text" class="form-control" id="clase">
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Foto</label>
-        <input type="file" class="form-control" id="foto-upload" accept="image/*">
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Firma</label>
-        <input type="file" class="form-control" id="firma-upload" accept="image/*">
-      </div>
-    </div>
-  </form>
-
-  <!-- Vista previa -->
-  <div class="mt-4" id="preview-container" style="display:none;">
-    <img id="license-template">
-    <img id="foto">
-    <img id="firma">
-    <div id="text-apellido" class="overlay-text" style="top:23%; left:25%;"></div>
-    <div id="text-nombre" class="overlay-text" style="top:28%; left:25%;"></div>
-    <div id="text-domicilio" class="overlay-text" style="top:45%; left:25%; font-size:1.5vw;"></div>
-    <div id="text-fecha-nac" class="overlay-text" style="top:33%; left:25%;"></div>
-    <div id="text-fecha-otorg" class="overlay-text" style="top:60%; left:25%;"></div>
-    <div id="text-fecha-venc" class="overlay-text" style="top:60%; left:45%;"></div>
-    <div id="text-num-licencia" class="overlay-text" style="top:15%; left:25%;"></div>
-    <div id="text-clase" class="overlay-text" style="top:15%; left:75%;"></div>
-  </div>
+<div class="canvas-container">
+    <canvas id="licenciaCanvas" width="1093" height="768"></canvas>
 </div>
 
 <script>
-document.getElementById("template-upload").addEventListener("change", function(e){
-  const file = e.target.files[0];
-  if(file){
+let templateImg = null;
+let selfieImg = null;
+
+document.getElementById('template').addEventListener('change', function(e) {
+    const file = e.target.files[0];
     const reader = new FileReader();
-    reader.onload = function(evt){
-      document.getElementById("license-template").src = evt.target.result;
-      document.getElementById("data-form").style.display = "block";
-      document.getElementById("preview-container").style.display = "inline-block";
-    }
+    reader.onload = function(evt) {
+        templateImg = new Image();
+        templateImg.onload = generarLicencia;
+        templateImg.src = evt.target.result;
+    };
     reader.readAsDataURL(file);
-  }
 });
 
-function bindInput(idInput, idText, formatter){
-  document.getElementById(idInput).addEventListener("input", function(){
-    document.getElementById(idText).textContent = formatter ? formatter(this.value) : this.value;
-  });
+document.getElementById('selfie').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        selfieImg = new Image();
+        selfieImg.onload = generarLicencia;
+        selfieImg.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+});
+
+function generarLicencia() {
+    const canvas = document.getElementById('licenciaCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+
+    if (templateImg) {
+        ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
+    }
+
+    // Selfie en el recuadro izquierdo
+    if (selfieImg) {
+        const fotoSize = 300;
+        ctx.drawImage(selfieImg, 60, 200, fotoSize, fotoSize);
+    }
+
+    ctx.font = "bold 30px Arial";
+    ctx.fillStyle = "black";
+    ctx.textBaseline = "top";
+
+    ctx.fillText(document.getElementById('apellido').value, 420, 120);
+    ctx.fillText(document.getElementById('nombre').value, 420, 160);
+    ctx.fillText(document.getElementById('domicilio').value, 420, 200);
+    ctx.fillText(document.getElementById('fechaNac').value, 420, 240);
+    ctx.fillText(document.getElementById('otorgamiento').value, 420, 280);
+    ctx.fillText(document.getElementById('vencimiento').value, 700, 280);
+    ctx.fillText(document.getElementById('nLicencia').value, 420, 80);
+    ctx.fillText(document.getElementById('clase').value, 900, 80);
+
+    // Marca de agua
+    let marca = document.getElementById('marcaAgua').value;
+    if (marca) {
+        ctx.font = "bold 60px Arial";
+        ctx.fillStyle = "rgba(0,0,0,0.1)";
+        ctx.save();
+        ctx.translate(canvas.width/2, canvas.height/2);
+        ctx.rotate(-Math.PI/6);
+        ctx.textAlign = "center";
+        ctx.fillText(marca, 0, 0);
+        ctx.restore();
+    }
 }
 
-bindInput("apellido", "text-apellido");
-bindInput("nombre", "text-nombre");
-bindInput("domicilio", "text-domicilio");
-bindInput("fecha-nac", "text-fecha-nac", v => v ? new Date(v).toLocaleDateString() : "");
-bindInput("fecha-otorg", "text-fecha-otorg", v => v ? new Date(v).toLocaleDateString() : "");
-bindInput("fecha-venc", "text-fecha-venc", v => v ? new Date(v).toLocaleDateString() : "");
-bindInput("num-licencia", "text-num-licencia");
-bindInput("clase", "text-clase");
-
-document.getElementById("foto-upload").addEventListener("change", function(e){
-  const file = e.target.files[0];
-  if(file){
-    const reader = new FileReader();
-    reader.onload = function(evt){
-      const img = document.getElementById("foto");
-      img.src = evt.target.result;
-      img.style.top = "20%";
-      img.style.left = "5%";
-      img.style.width = "18%";
-      img.style.height = "38%";
-    }
-    reader.readAsDataURL(file);
-  }
-});
-
-document.getElementById("firma-upload").addEventListener("change", function(e){
-  const file = e.target.files[0];
-  if(file){
-    const reader = new FileReader();
-    reader.onload = function(evt){
-      const img = document.getElementById("firma");
-      img.src = evt.target.result;
-      img.style.top = "65%";
-      img.style.left = "25%";
-      img.style.width = "20%";
-      img.style.height = "10%";
-    }
-    reader.readAsDataURL(file);
-  }
-});
+function descargar() {
+    const canvas = document.getElementById('licenciaCanvas');
+    const link = document.createElement('a');
+    link.download = 'licencia.png';
+    link.href = canvas.toDataURL();
+    link.click();
+}
 </script>
 
 </body>
