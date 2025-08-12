@@ -1,149 +1,656 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Generador de Licencia</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Generador de Licencia (Calibrable, con selfie y firma)</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background: #f0f0f0;
-  }
-  input, button {
-    margin: 5px 0;
-    padding: 6px;
-    width: 100%;
-  }
-  canvas {
-    display: block;
-    margin-top: 20px;
-    border: 1px solid #ccc;
-    background: white;
-  }
+  body{background:#f3f6fb; font-family:Inter,Arial,Helvetica,sans-serif; padding:18px;}
+  .card{border-radius:10px; box-shadow:0 6px 18px rgba(20,30,60,0.06);}
+  #previewCanvas{width:100%; height:auto; display:block; border-radius:6px; background:#fff;}
+  .slider-label{font-size:0.9rem; margin-top:6px;}
+  .small-muted{font-size:0.85rem; color:#6c757d;}
+  .btn-block{width:100%;}
+  .note{font-size:0.85rem;color:#8a8a8a}
 </style>
 </head>
 <body>
+<div class="container">
+  <div class="row mb-3">
+    <div class="col-12">
+      <h4>Generador (calibrable) — MUESTRA obligatoria</h4>
+      <p class="note">Este generador es para fines de prueba y **siempre** añade "MUESTRA / SAMPLE" a la imagen descargada. No usar para documentos oficiales.</p>
+    </div>
+  </div>
 
-<h2>Generador de Licencia Nacional de Conducir</h2>
+  <div class="row g-3">
+    <div class="col-lg-5">
+      <div class="card p-3 mb-3">
+        <label class="form-label fw-600">1) Subir plantilla (obligatoria)</label>
+        <input id="tplInput" type="file" class="form-control" accept="image/*">
 
-<label>Plantilla de licencia:</label>
-<input type="file" id="template" accept="image/*">
+        <hr>
 
-<label>Selfie (foto del titular):</label>
-<input type="file" id="selfie" accept="image/*">
+        <form id="dataForm" style="display:none;">
+          <div class="mb-2">
+            <label class="form-label">Apellido *</label>
+            <input id="apellido" class="form-control" type="text" maxlength="80" placeholder="APELLIDO">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Nombre *</label>
+            <input id="nombre" class="form-control" type="text" maxlength="80" placeholder="NOMBRE">
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Domicilio *</label>
+            <input id="domicilio" class="form-control" type="text" maxlength="180" placeholder="DOMICILIO">
+          </div>
 
-<label>Firma del titular:</label>
-<input type="file" id="firma" accept="image/*">
+          <div class="row">
+            <div class="col-6 mb-2">
+              <label class="form-label">Fecha Nac. *</label>
+              <input id="fechaNac" class="form-control" type="date">
+            </div>
+            <div class="col-6 mb-2">
+              <label class="form-label">Otorgamiento *</label>
+              <input id="fechaO" class="form-control" type="date">
+            </div>
+          </div>
 
-<label>Apellido:</label>
-<input type="text" id="apellido">
+          <div class="row">
+            <div class="col-6 mb-2">
+              <label class="form-label">Vencimiento *</label>
+              <input id="fechaV" class="form-control" type="date">
+            </div>
+            <div class="col-6 mb-2">
+              <label class="form-label">Clase *</label>
+              <input id="clase" class="form-control" type="text" maxlength="10" placeholder="B1">
+            </div>
+          </div>
 
-<label>Nombre:</label>
-<input type="text" id="nombre">
+          <div class="mb-2">
+            <label class="form-label">N° Licencia *</label>
+            <input id="nlic" class="form-control" type="text" maxlength="30" placeholder="12345678">
+          </div>
 
-<label>Número de licencia:</label>
-<input type="text" id="nLicencia">
+          <div class="mb-2">
+            <label class="form-label">2) Subir selfie (obligatoria)</label>
+            <input id="photoInput" type="file" class="form-control" accept="image/*">
+            <div class="small-muted mt-1">Se recorta/escala automáticamente (modo cover) para no deformar.</div>
+          </div>
 
-<label>Clase:</label>
-<input type="text" id="clase">
+          <div class="mb-2">
+            <label class="form-label">3) Subir firma (opcional)</label>
+            <input id="sigInput" type="file" class="form-control" accept="image/*">
+            <div class="small-muted mt-1">La firma se adaptará dentro de un área cuadrada.</div>
+          </div>
 
-<label>Domicilio:</label>
-<input type="text" id="domicilio">
+          <div class="mb-3">
+            <label class="form-label">Texto marca de agua (se añadirá + " MUESTRA / SAMPLE")</label>
+            <input id="waterText" class="form-control" type="text" placeholder="Solo ejemplo">
+          </div>
 
-<label>Fecha de nacimiento:</label>
-<input type="text" id="fechaNac">
+          <div class="d-grid mb-2">
+            <button id="downloadBtn" type="button" class="btn btn-primary btn-block">Descargar JPG (8cm x 6cm)</button>
+          </div>
+          <div class="d-grid mb-1">
+            <button id="saveBtn" type="button" class="btn btn-outline-secondary btn-block">Guardar ajustes</button>
+          </div>
+          <div class="d-grid">
+            <button id="resetBtn" type="button" class="btn btn-outline-danger btn-block">Restablecer ajustes</button>
+          </div>
+        </form>
+      </div>
 
-<label>Fecha de otorgamiento:</label>
-<input type="text" id="fechaOtorg">
+      <div class="card p-3">
+        <h6 class="mb-2">Ajuste fino (en % respecto ancho/alto plantilla)</h6>
 
-<label>Fecha de vencimiento:</label>
-<input type="text" id="fechaVenc">
+        <div class="mb-2">
+          <div class="slider-label">Foto X (%) <span id="photoXVal" class="fw-bold">6</span></div>
+          <input id="photoX" type="range" min="0" max="90" value="6" class="form-range">
+        </div>
+        <div class="mb-2">
+          <div class="slider-label">Foto Y (%) <span id="photoYVal" class="fw-bold">18</span></div>
+          <input id="photoY" type="range" min="0" max="90" value="18" class="form-range">
+        </div>
+        <div class="mb-2">
+          <div class="slider-label">Foto W (%) <span id="photoWVal" class="fw-bold">27</span></div>
+          <input id="photoW" type="range" min="5" max="60" value="27" class="form-range">
+        </div>
+        <div class="mb-2">
+          <div class="slider-label">Foto H (%) <span id="photoHVal" class="fw-bold">45</span></div>
+          <input id="photoH" type="range" min="5" max="80" value="45" class="form-range">
+        </div>
 
-<label>Texto de marca de agua:</label>
-<input type="text" id="marcaAgua" placeholder="Ej: SOLO EJEMPLO">
+        <hr>
 
-<button id="generar">Generar Licencia</button>
+        <div class="mb-2">
+          <div class="slider-label">Firma X (%) <span id="sigXVal" class="fw-bold">57</span></div>
+          <input id="sigX" type="range" min="0" max="90" value="57" class="form-range">
+        </div>
+        <div class="mb-2">
+          <div class="slider-label">Firma Y (%) <span id="sigYVal" class="fw-bold">72</span></div>
+          <input id="sigY" type="range" min="0" max="90" value="72" class="form-range">
+        </div>
+        <div class="mb-2">
+          <div class="slider-label">Firma tamaño (%) <span id="sigSizeVal" class="fw-bold">11</span></div>
+          <input id="sigSize" type="range" min="3" max="30" value="11" class="form-range">
+        </div>
 
-<canvas id="lienzo" width="850" height="540"></canvas>
+        <hr>
+
+        <div class="mb-2">
+          <div class="slider-label">Escala texto (%) <span id="textScaleVal" class="fw-bold">4</span></div>
+          <input id="textScale" type="range" min="2" max="8" value="4" class="form-range">
+        </div>
+
+        <div class="small-muted mt-2">Ajustes aplican en tiempo real a la vista previa. Usa <strong>Guardar ajustes</strong> para conservarlos en este navegador.</div>
+      </div>
+
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <strong>Vista previa (en tiempo real)</strong>
+          <div class="small-muted">Ajusta sliders para calibrar</div>
+        </div>
+        <canvas id="previewCanvas" width="780" height="580"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-const canvas = document.getElementById('lienzo');
-const ctx = canvas.getContext('2d');
+/* ---- Helpers y estado ---- */
+const tplInput = document.getElementById('tplInput');
+const photoInput = document.getElementById('photoInput');
+const sigInput = document.getElementById('sigInput');
 
-let imgTemplate = new Image();
-let imgSelfie = new Image();
-let imgFirma = new Image();
+const dataForm = document.getElementById('dataForm');
+const downloadBtn = document.getElementById('downloadBtn');
+const saveBtn = document.getElementById('saveBtn');
+const resetBtn = document.getElementById('resetBtn');
 
-function cargarImagen(input, callback) {
-  if (input.files && input.files[0]) {
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      callback(e.target.result);
-    }
-    reader.readAsDataURL(input.files[0]);
+const previewCanvas = document.getElementById('previewCanvas');
+const ctx = previewCanvas.getContext('2d');
+
+let tplImg = null, photoImg = null, sigImg = null;
+
+// default layout (percentual)
+const defaults = {
+  photo: { xPct: 6, yPct:18, wPct:27, hPct:45 },
+  sig: { xPct:57, yPct:72, sizePct:11 },
+  textScalePct: 4
+};
+let state = JSON.parse(JSON.stringify(defaults));
+
+// slider elements
+const els = {
+  photoX: document.getElementById('photoX'), photoY: document.getElementById('photoY'),
+  photoW: document.getElementById('photoW'), photoH: document.getElementById('photoH'),
+  sigX: document.getElementById('sigX'), sigY: document.getElementById('sigY'),
+  sigSize: document.getElementById('sigSize'), textScale: document.getElementById('textScale'),
+  photoXVal: document.getElementById('photoXVal'), photoYVal: document.getElementById('photoYVal'),
+  photoWVal: document.getElementById('photoWVal'), photoHVal: document.getElementById('photoHVal'),
+  sigXVal: document.getElementById('sigXVal'), sigYVal: document.getElementById('sigYVal'),
+  sigSizeVal: document.getElementById('sigSizeVal'), textScaleVal: document.getElementById('textScaleVal')
+};
+
+// text inputs
+const inputs = {
+  apellido: document.getElementById('apellido'),
+  nombre: document.getElementById('nombre'),
+  domicilio: document.getElementById('domicilio'),
+  fechaNac: document.getElementById('fechaNac'),
+  fechaO: document.getElementById('fechaO'),
+  fechaV: document.getElementById('fechaV'),
+  nlic: document.getElementById('nlic'),
+  clase: document.getElementById('clase'),
+  waterText: document.getElementById('waterText')
+};
+
+// util: draw image cover (crop to fill) into rectangle dx,dy,dw,dh
+function drawImageCover(ctx, img, dx, dy, dw, dh){
+  if(!img) return;
+  const iw = img.width, ih = img.height;
+  const r = Math.max(dw/iw, dh/ih);
+  const sw = dw / r, sh = dh / r;
+  const sx = Math.max(0, (iw - sw)/2);
+  const sy = Math.max(0, (ih - sh)/2);
+  try {
+    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+  } catch(e){
+    // fallback
+    ctx.drawImage(img, dx, dy, dw, dh);
   }
 }
 
-document.getElementById('template').addEventListener('change', function() {
-  cargarImagen(this, (src) => {
-    imgTemplate.src = src;
-  });
-});
+// draw signature inside square area, keep aspect fit and centered
+function drawSignatureInSquare(ctx, img, cx, cy, size){
+  if(!img) return;
+  const pad = Math.round(size * 0.06);
+  const tw = size - pad*2, th = size - pad*2;
+  const iw = img.width, ih = img.height;
+  const r = Math.min(tw/iw, th/ih);
+  const dw = Math.round(iw * r), dh = Math.round(ih * r);
+  const dx = cx + Math.round((size - dw)/2);
+  const dy = cy + Math.round((size - dh)/2);
+  ctx.drawImage(img, 0, 0, iw, ih, dx, dy, dw, dh);
+}
 
-document.getElementById('selfie').addEventListener('change', function() {
-  cargarImagen(this, (src) => {
-    imgSelfie.src = src;
-  });
-});
+// wrapText for domicilio
+function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+  if(!text) return;
+  const words = text.split(' ');
+  let line = '';
+  for(let n=0;n<words.length;n++){
+    const testLine = line ? line + ' ' + words[n] : words[n];
+    const metrics = ctx.measureText(testLine);
+    if(metrics.width > maxWidth && n>0){
+      ctx.fillText(line, x, y);
+      line = words[n];
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line, x, y);
+}
 
-document.getElementById('firma').addEventListener('change', function() {
-  cargarImagen(this, (src) => {
-    imgFirma.src = src;
-  });
-});
+// format date to "DD MMM YYYY" short spanish
+const monthsES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
+function formatDateShort(dstr){
+  if(!dstr) return '';
+  const parts = dstr.split('-');
+  if(parts.length !== 3) return dstr;
+  const [y,m,d] = parts;
+  const msi = parseInt(m,10)-1;
+  return `${String(d).padStart(2,'0')} ${monthsES[msi]} ${y}`;
+}
 
-document.getElementById('generar').addEventListener('click', () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Dibuja plantilla
-  ctx.drawImage(imgTemplate, 0, 0, canvas.width, canvas.height);
-
-  // Dibuja selfie (posición aproximada)
-  if (imgSelfie.src) {
-    ctx.drawImage(imgSelfie, 50, 130, 180, 210);
+/* ---- Draw Preview ---- */
+function drawPreview(){
+  if(!tplImg) {
+    // clear small canvas
+    ctx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
+    ctx.fillStyle = "#f8f9fa";
+    ctx.fillRect(0,0,previewCanvas.width, previewCanvas.height);
+    ctx.fillStyle = "#666";
+    ctx.fillText("Sube la plantilla para habilitar vista previa", 20, 20);
+    return;
   }
 
-  // Dibuja texto
-  ctx.font = 'bold 24px Arial';
+  // fit preview canvas to template aspect ratio
+  const maxPreviewW = 780;
+  const ar = tplImg.width / tplImg.height;
+  const previewW = Math.min(maxPreviewW, tplImg.width);
+  const previewH = Math.round(previewW / ar);
+  if(previewCanvas.width !== previewW || previewCanvas.height !== previewH){
+    previewCanvas.width = previewW;
+    previewCanvas.height = previewH;
+  }
+
+  // draw template to fill preview
+  // use drawImageCover to fill
+  drawImageCover(ctx, tplImg, 0, 0, previewCanvas.width, previewCanvas.height);
+
+  // compute photo rect
+  const px = Math.round(state.photo.xPct/100 * previewCanvas.width);
+  const py = Math.round(state.photo.yPct/100 * previewCanvas.height);
+  const pw = Math.round(state.photo.wPct/100 * previewCanvas.width);
+  const ph = Math.round(state.photo.hPct/100 * previewCanvas.height);
+
+  // draw photo (cover)
+  if(photoImg) drawImageCover(ctx, photoImg, px, py, pw, ph);
+  else { ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.strokeRect(px,py,pw,ph); }
+
+  // signature square
+  const sSize = Math.round(state.sig.sizePct/100 * previewCanvas.width);
+  const sx = Math.round(state.sig.xPct/100 * previewCanvas.width);
+  const sy = Math.round(state.sig.yPct/100 * previewCanvas.height);
+  // light background
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillRect(sx, sy, sSize, sSize);
+  if(sigImg) drawSignatureInSquare(ctx, sigImg, sx, sy, sSize);
+  else { ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.strokeRect(sx,sy,sSize,sSize); }
+
+  // draw texts
   ctx.fillStyle = '#000';
-  ctx.fillText(document.getElementById('apellido').value, 280, 160);
-  ctx.fillText(document.getElementById('nombre').value, 280, 190);
-  ctx.fillText(document.getElementById('nLicencia').value, 280, 60);
-  ctx.fillText(document.getElementById('clase').value, 720, 60);
-  ctx.fillText(document.getElementById('domicilio').value, 280, 220);
-  ctx.fillText(document.getElementById('fechaNac').value, 280, 250);
-  ctx.fillText(document.getElementById('fechaOtorg').value, 280, 280);
-  ctx.fillText(document.getElementById('fechaVenc').value, 500, 280);
+  ctx.textBaseline = 'top';
+  ctx.textAlign = 'left';
 
-  // Dibuja firma (escalada cuadrada)
-  if (imgFirma.src) {
-    ctx.drawImage(imgFirma, 500, 320, 200, 60);
+  const pos = {
+    nlic: {xPct:0.498, yPct:0.122, fontPct:0.06},
+    apellido: {xPct:0.498, yPct:0.283, fontPct:0.04},
+    nombre: {xPct:0.498, yPct:0.354, fontPct:0.05},
+    domicilio: {xPct:0.498, yPct:0.435, fontPct:0.035, maxWidthPct:0.46},
+    fechaN: {xPct:0.498, yPct:0.505, fontPct:0.04},
+    fechaO: {xPct:0.498, yPct:0.61, fontPct:0.04},
+    fechaV: {xPct:0.785, yPct:0.61, fontPct:0.04},
+    clase: {xPct:0.875, yPct:0.122, fontPct:0.10}
+  };
+
+  function drawField(key, text){
+    const p = pos[key];
+    const fontPx = Math.max(10, Math.round(p.fontPct * previewCanvas.width));
+    ctx.font = `bold ${fontPx}px Arial, sans-serif`;
+    const tx = Math.round(p.xPct * previewCanvas.width);
+    const ty = Math.round(p.yPct * previewCanvas.height);
+    if(key==='domicilio' && p.maxWidthPct){
+      const maxW = Math.round(p.maxWidthPct * previewCanvas.width);
+      wrapText(ctx, (text||'').toUpperCase(), tx, ty, maxW, Math.round(fontPx*1.1));
+    } else {
+      ctx.fillText((text||'').toString().toUpperCase(), tx, ty);
+    }
   }
 
-  // Marca de agua
-  const marca = document.getElementById('marcaAgua').value;
-  if (marca) {
-    ctx.save();
-    ctx.translate(canvas.width/2, canvas.height/2);
-    ctx.rotate(-Math.PI / 4);
-    ctx.font = 'bold 50px Arial';
-    ctx.fillStyle = 'rgba(150,150,150,0.3)';
-    ctx.textAlign = 'center';
-    ctx.fillText(marca, 0, 0);
-    ctx.restore();
-  }
+  drawField('nlic', document.getElementById('nlic').value);
+  drawField('apellido', document.getElementById('apellido').value);
+  drawField('nombre', document.getElementById('nombre').value);
+  drawField('domicilio', document.getElementById('domicilio').value);
+  drawField('fechaN', formatDateShort(document.getElementById('fechaNac').value));
+  drawField('fechaO', formatDateShort(document.getElementById('fechaO').value));
+  drawField('fechaV', formatDateShort(document.getElementById('fechaV').value));
+  drawField('clase', document.getElementById('clase').value);
+
+  // watermark (user text + required MUESTRA)
+  const wmTextUser = (document.getElementById('waterText').value || '').trim();
+  const wmText = (wmTextUser ? wmTextUser + ' — ' : '') + 'MUESTRA / SAMPLE';
+  ctx.save();
+  ctx.translate(previewCanvas.width/2, previewCanvas.height/2);
+  ctx.rotate(-Math.atan(previewCanvas.height / previewCanvas.width));
+  const wmSize = Math.round(previewCanvas.width * 0.14);
+  ctx.font = `bold ${wmSize}px Arial`;
+  ctx.globalAlpha = 0.22;
+  ctx.fillStyle = '#cc0000';
+  ctx.textAlign = 'center';
+  ctx.fillText(wmText, 0, 0);
+  ctx.restore();
+  ctx.globalAlpha = 1.0;
+}
+
+/* ---- Events: upload template, photo, signature ---- */
+tplInput.addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = ev=>{
+    tplImg = new Image();
+    tplImg.onload = ()=>{
+      // enable form once template loaded
+      dataForm.style.display = 'block';
+      // draw preview
+      drawPreview();
+      // restore saved settings if exist
+      loadSettings();
+    };
+    tplImg.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
 });
-</script>
 
+photoInput.addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  if(!f){ photoImg = null; drawPreview(); return; }
+  const r = new FileReader();
+  r.onload = ev=>{
+    photoImg = new Image();
+    photoImg.onload = drawPreview;
+    photoImg.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
+});
+
+sigInput.addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  if(!f){ sigImg = null; drawPreview(); return; }
+  const r = new FileReader();
+  r.onload = ev=>{
+    sigImg = new Image();
+    sigImg.onload = drawPreview;
+    sigImg.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
+});
+
+/* ---- Sliders wiring ---- */
+function updateStateFromSliders(){
+  state.photo.xPct = Number(els.photoX.value);
+  state.photo.yPct = Number(els.photoY.value);
+  state.photo.wPct = Number(els.photoW.value);
+  state.photo.hPct = Number(els.photoH.value);
+  state.sig.xPct = Number(els.sigX.value);
+  state.sig.yPct = Number(els.sigY.value);
+  state.sig.sizePct = Number(els.sigSize.value);
+  state.textScalePct = Number(els.textScale.value);
+
+  els.photoXVal.textContent = state.photo.xPct;
+  els.photoYVal.textContent = state.photo.yPct;
+  els.photoWVal.textContent = state.photo.wPct;
+  els.photoHVal.textContent = state.photo.hPct;
+  els.sigXVal.textContent = state.sig.xPct;
+  els.sigYVal.textContent = state.sig.yPct;
+  els.sigSizeVal.textContent = state.sig.sizePct;
+  els.textScaleVal.textContent = state.textScalePct;
+
+  drawPreview();
+}
+[els.photoX,els.photoY,els.photoW,els.photoH,els.sigX,els.sigY,els.sigSize,els.textScale]
+.forEach(el=>el.addEventListener('input', updateStateFromSliders));
+
+/* ---- Inputs update preview ---- */
+Object.values(inputs).forEach(inp=>{
+  inp.addEventListener('input', drawPreview);
+});
+['apellido','nombre','domicilio','fechaNac','fechaO','fechaV','nlic','clase'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', drawPreview);
+});
+
+/* ---- Save / Reset settings (localStorage) ---- */
+const STORAGE_KEY = 'licencia_calibracion_v1';
+function saveSettings(){
+  const toSave = {state, inputs: {
+    photoX: state.photo.xPct, photoY: state.photo.yPct, photoW: state.photo.wPct, photoH: state.photo.hPct,
+    sigX: state.sig.xPct, sigY: state.sig.yPct, sigSize: state.sig.sizePct,
+    textScale: state.textScalePct
+  }};
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  alert('Ajustes guardados localmente.');
+}
+function loadSettings(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return;
+  try{
+    const parsed = JSON.parse(raw);
+    if(parsed && parsed.state){
+      state = parsed.state;
+      // apply to sliders
+      els.photoX.value = state.photo.xPct;
+      els.photoY.value = state.photo.yPct;
+      els.photoW.value = state.photo.wPct;
+      els.photoH.value = state.photo.hPct;
+      els.sigX.value = state.sig.xPct;
+      els.sigY.value = state.sig.yPct;
+      els.sigSize.value = state.sig.sizePct;
+      els.textScale.value = state.textScalePct;
+      updateStateFromSliders();
+    }
+  }catch(e){}
+}
+function resetSettings(){
+  if(!confirm('Restablecer ajustes a valores por defecto?')) return;
+  state = JSON.parse(JSON.stringify(defaults));
+  els.photoX.value = state.photo.xPct;
+  els.photoY.value = state.photo.yPct;
+  els.photoW.value = state.photo.wPct;
+  els.photoH.value = state.photo.hPct;
+  els.sigX.value = state.sig.xPct;
+  els.sigY.value = state.sig.yPct;
+  els.sigSize.value = state.sig.sizePct;
+  els.textScale.value = state.textScalePct;
+  updateStateFromSliders();
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+/* ---- Download HD (JPG 945x709) ---- */
+downloadBtn.addEventListener('click', ()=>{
+  if(!tplImg){ alert('Sube la plantilla primero.'); return; }
+  if(!photoImg){ if(!confirm('No has subido selfie. ¿Continuar de todas formas?')) return; }
+
+  // validate required fields
+  const required = [
+    {id:'apellido', name:'Apellido'},
+    {id:'nombre', name:'Nombre'},
+    {id:'domicilio', name:'Domicilio'},
+    {id:'fechaNac', name:'Fecha de Nacimiento'},
+    {id:'fechaO', name:'Fecha de Otorgamiento'},
+    {id:'fechaV', name:'Fecha de Vencimiento'},
+    {id:'nlic', name:'Nº Licencia'},
+    {id:'clase', name:'Clase'}
+  ];
+  for(const r of required){
+    if(!document.getElementById(r.id).value){
+      alert('Falta el campo obligatorio: ' + r.name);
+      return;
+    }
+  }
+
+  const hdW = 945, hdH = 709;
+  const hdCanvas = document.createElement('canvas');
+  hdCanvas.width = hdW; hdCanvas.height = hdH;
+  const hc = hdCanvas.getContext('2d');
+
+  // draw template covering HD canvas (cover)
+  drawImageCover(hc, tplImg, 0, 0, hdW, hdH);
+
+  // photo area scaled to HD
+  const pX = Math.round(state.photo.xPct/100 * hdW);
+  const pY = Math.round(state.photo.yPct/100 * hdH);
+  const pW = Math.round(state.photo.wPct/100 * hdW);
+  const pH = Math.round(state.photo.hPct/100 * hdH);
+  if(photoImg) drawImageCover(hc, photoImg, pX, pY, pW, pH);
+
+  // signature
+  const sSize = Math.round(state.sig.sizePct/100 * hdW);
+  const sX = Math.round(state.sig.xPct/100 * hdW);
+  const sY = Math.round(state.sig.yPct/100 * hdH);
+  if(sigImg){
+    // white background to ensure visibility
+    hc.fillStyle = '#fff'; hc.globalAlpha = 0.95; hc.fillRect(sX, sY, sSize, sSize); hc.globalAlpha = 1.0;
+    drawSignatureInSquare(hc, sigImg, sX, sY, sSize);
+  }
+
+  // draw texts on HD using same pos map scaled
+  hc.fillStyle = '#000';
+  hc.textBaseline = 'top';
+  hc.textAlign = 'left';
+  const posHd = {
+    nlic: {x: 0.498, y: 0.122, fontPct: 0.06},
+    apellido: {x:0.498, y:0.283, fontPct:0.04},
+    nombre: {x:0.498, y:0.354, fontPct:0.05},
+    domicilio: {x:0.498, y:0.435, fontPct:0.035, maxWidthPct:0.46},
+    fechaN: {x:0.498, y:0.505, fontPct:0.04},
+    fechaO: {x:0.498, y:0.61, fontPct:0.04},
+    fechaV: {x:0.785, y:0.61, fontPct:0.04},
+    clase: {x:0.875, y:0.122, fontPct:0.10}
+  };
+
+  function drawFieldHd(key, text){
+    const p = posHd[key];
+    const fontPx = Math.max(12, Math.round(p.fontPct * hdW));
+    hc.font = `bold ${fontPx}px Arial, sans-serif`;
+    const tx = Math.round(p.x * hdW);
+    const ty = Math.round(p.y * hdH);
+    if(key==='domicilio' && p.maxWidthPct){
+      const maxW = Math.round(p.maxWidthPct * hdW);
+      wrapText(hc, (text||'').toUpperCase(), tx, ty, maxW, Math.round(fontPx*1.1));
+    } else {
+      hc.fillText((text||'').toString().toUpperCase(), tx, ty);
+    }
+  }
+
+  drawFieldHd('nlic', document.getElementById('nlic').value);
+  drawFieldHd('apellido', document.getElementById('apellido').value);
+  drawFieldHd('nombre', document.getElementById('nombre').value);
+  drawFieldHd('domicilio', document.getElementById('domicilio').value);
+  drawFieldHd('fechaN', formatDateShort(document.getElementById('fechaNac').value));
+  drawFieldHd('fechaO', formatDateShort(document.getElementById('fechaO').value));
+  drawFieldHd('fechaV', formatDateShort(document.getElementById('fechaV').value));
+  drawFieldHd('clase', document.getElementById('clase').value);
+
+  // watermark on HD (must include MUESTRA)
+  const userWm = (document.getElementById('waterText').value || '').trim();
+  const wm = (userWm ? userWm + ' — ' : '') + 'MUESTRA / SAMPLE';
+  hc.save();
+  hc.translate(hdW/2, hdH/2);
+  hc.rotate(-Math.atan(hdH/hdW));
+  const wmS = Math.round(hdW * 0.14);
+  hc.font = `bold ${wmS}px Arial`;
+  hc.globalAlpha = 0.22;
+  hc.fillStyle = '#cc0000';
+  hc.textAlign = 'center';
+  hc.fillText(wm, 0, 0);
+  hc.restore();
+  hc.globalAlpha = 1.0;
+
+  // download JPG
+  const url = hdCanvas.toDataURL('image/jpeg', 0.95);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'licencia_muestra.jpg';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+});
+
+/* ---- Save / Reset handlers ---- */
+saveBtn.addEventListener('click', saveSettings);
+resetBtn.addEventListener('click', resetSettings);
+
+/* ---- persistence: load saved sliders if any when template loaded ---- */
+function saveSettings(){
+  const saved = {state};
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    alert('Ajustes guardados en este navegador.');
+  }catch(e){ alert('Error guardando ajustes.'); }
+}
+function resetSettings(){
+  if(!confirm('¿Restablecer ajustes a valores por defecto?')) return;
+  state = JSON.parse(JSON.stringify(defaults));
+  applyStateToSliders();
+  drawPreview();
+  localStorage.removeItem(STORAGE_KEY);
+}
+function loadSettingsOnStart(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return;
+  try{
+    const parsed = JSON.parse(raw);
+    if(parsed && parsed.state){
+      state = parsed.state;
+      applyStateToSliders();
+    }
+  }catch(e){}
+}
+const STORAGE_KEY = 'licencia_calibracion_v1';
+function applyStateToSliders(){
+  els.photoX.value = state.photo.xPct;
+  els.photoY.value = state.photo.yPct;
+  els.photoW.value = state.photo.wPct;
+  els.photoH.value = state.photo.hPct;
+  els.sigX.value = state.sig.xPct;
+  els.sigY.value = state.sig.yPct;
+  els.sigSize.value = state.sig.sizePct;
+  els.textScale.value = state.textScalePct;
+  updateStateFromSliders();
+}
+
+/* ---- init ---- */
+loadSettingsOnStart();
+updateStateFromSliders();
+drawPreview();
+</script>
 </body>
 </html>
