@@ -2,113 +2,147 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Generador Licencia de Conducir</title>
+<title>Generador de Licencia</title>
 <style>
-    body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
-    .formulario { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-    .canvas-container { text-align: center; }
-    canvas { border: 1px solid #ccc; }
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f0f0f0;
+  }
+  input, button {
+    margin: 5px 0;
+    padding: 6px;
+    width: 100%;
+  }
+  canvas {
+    display: block;
+    margin-top: 20px;
+    border: 1px solid #ccc;
+    background: white;
+  }
 </style>
 </head>
 <body>
 
-<h2>Generador Licencia de Conducir</h2>
+<h2>Generador de Licencia Nacional de Conducir</h2>
 
-<div class="formulario">
-    <label>Plantilla Licencia: <input type="file" id="template" accept="image/*"></label><br><br>
-    <label>Selfie: <input type="file" id="selfie" accept="image/*"></label><br><br>
-    <label>Apellido: <input type="text" id="apellido"></label><br><br>
-    <label>Nombre: <input type="text" id="nombre"></label><br><br>
-    <label>Domicilio: <input type="text" id="domicilio"></label><br><br>
-    <label>Fecha Nac.: <input type="date" id="fechaNac"></label><br><br>
-    <label>Otorgamiento: <input type="date" id="otorgamiento"></label><br><br>
-    <label>Vencimiento: <input type="date" id="vencimiento"></label><br><br>
-    <label>N° Licencia: <input type="text" id="nLicencia"></label><br><br>
-    <label>Clase: <input type="text" id="clase"></label><br><br>
-    <label>Marca de Agua: <input type="text" id="marcaAgua"></label><br><br>
-    <button onclick="generarLicencia()">Generar Licencia</button>
-    <button onclick="descargar()">Descargar</button>
-</div>
+<label>Plantilla de licencia:</label>
+<input type="file" id="template" accept="image/*">
 
-<div class="canvas-container">
-    <canvas id="licenciaCanvas" width="1093" height="768"></canvas>
-</div>
+<label>Selfie (foto del titular):</label>
+<input type="file" id="selfie" accept="image/*">
+
+<label>Firma del titular:</label>
+<input type="file" id="firma" accept="image/*">
+
+<label>Apellido:</label>
+<input type="text" id="apellido">
+
+<label>Nombre:</label>
+<input type="text" id="nombre">
+
+<label>Número de licencia:</label>
+<input type="text" id="nLicencia">
+
+<label>Clase:</label>
+<input type="text" id="clase">
+
+<label>Domicilio:</label>
+<input type="text" id="domicilio">
+
+<label>Fecha de nacimiento:</label>
+<input type="text" id="fechaNac">
+
+<label>Fecha de otorgamiento:</label>
+<input type="text" id="fechaOtorg">
+
+<label>Fecha de vencimiento:</label>
+<input type="text" id="fechaVenc">
+
+<label>Texto de marca de agua:</label>
+<input type="text" id="marcaAgua" placeholder="Ej: SOLO EJEMPLO">
+
+<button id="generar">Generar Licencia</button>
+
+<canvas id="lienzo" width="850" height="540"></canvas>
 
 <script>
-let templateImg = null;
-let selfieImg = null;
+const canvas = document.getElementById('lienzo');
+const ctx = canvas.getContext('2d');
 
-document.getElementById('template').addEventListener('change', function(e) {
-    const file = e.target.files[0];
+let imgTemplate = new Image();
+let imgSelfie = new Image();
+let imgFirma = new Image();
+
+function cargarImagen(input, callback) {
+  if (input.files && input.files[0]) {
     const reader = new FileReader();
-    reader.onload = function(evt) {
-        templateImg = new Image();
-        templateImg.onload = generarLicencia;
-        templateImg.src = evt.target.result;
-    };
-    reader.readAsDataURL(file);
-});
-
-document.getElementById('selfie').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-        selfieImg = new Image();
-        selfieImg.onload = generarLicencia;
-        selfieImg.src = evt.target.result;
-    };
-    reader.readAsDataURL(file);
-});
-
-function generarLicencia() {
-    const canvas = document.getElementById('licenciaCanvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0,0,canvas.width, canvas.height);
-
-    if (templateImg) {
-        ctx.drawImage(templateImg, 0, 0, canvas.width, canvas.height);
+    reader.onload = function(e) {
+      callback(e.target.result);
     }
-
-    // Selfie en el recuadro izquierdo
-    if (selfieImg) {
-        const fotoSize = 300;
-        ctx.drawImage(selfieImg, 60, 200, fotoSize, fotoSize);
-    }
-
-    ctx.font = "bold 30px Arial";
-    ctx.fillStyle = "black";
-    ctx.textBaseline = "top";
-
-    ctx.fillText(document.getElementById('apellido').value, 420, 120);
-    ctx.fillText(document.getElementById('nombre').value, 420, 160);
-    ctx.fillText(document.getElementById('domicilio').value, 420, 200);
-    ctx.fillText(document.getElementById('fechaNac').value, 420, 240);
-    ctx.fillText(document.getElementById('otorgamiento').value, 420, 280);
-    ctx.fillText(document.getElementById('vencimiento').value, 700, 280);
-    ctx.fillText(document.getElementById('nLicencia').value, 420, 80);
-    ctx.fillText(document.getElementById('clase').value, 900, 80);
-
-    // Marca de agua
-    let marca = document.getElementById('marcaAgua').value;
-    if (marca) {
-        ctx.font = "bold 60px Arial";
-        ctx.fillStyle = "rgba(0,0,0,0.1)";
-        ctx.save();
-        ctx.translate(canvas.width/2, canvas.height/2);
-        ctx.rotate(-Math.PI/6);
-        ctx.textAlign = "center";
-        ctx.fillText(marca, 0, 0);
-        ctx.restore();
-    }
+    reader.readAsDataURL(input.files[0]);
+  }
 }
 
-function descargar() {
-    const canvas = document.getElementById('licenciaCanvas');
-    const link = document.createElement('a');
-    link.download = 'licencia.png';
-    link.href = canvas.toDataURL();
-    link.click();
-}
+document.getElementById('template').addEventListener('change', function() {
+  cargarImagen(this, (src) => {
+    imgTemplate.src = src;
+  });
+});
+
+document.getElementById('selfie').addEventListener('change', function() {
+  cargarImagen(this, (src) => {
+    imgSelfie.src = src;
+  });
+});
+
+document.getElementById('firma').addEventListener('change', function() {
+  cargarImagen(this, (src) => {
+    imgFirma.src = src;
+  });
+});
+
+document.getElementById('generar').addEventListener('click', () => {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Dibuja plantilla
+  ctx.drawImage(imgTemplate, 0, 0, canvas.width, canvas.height);
+
+  // Dibuja selfie (posición aproximada)
+  if (imgSelfie.src) {
+    ctx.drawImage(imgSelfie, 50, 130, 180, 210);
+  }
+
+  // Dibuja texto
+  ctx.font = 'bold 24px Arial';
+  ctx.fillStyle = '#000';
+  ctx.fillText(document.getElementById('apellido').value, 280, 160);
+  ctx.fillText(document.getElementById('nombre').value, 280, 190);
+  ctx.fillText(document.getElementById('nLicencia').value, 280, 60);
+  ctx.fillText(document.getElementById('clase').value, 720, 60);
+  ctx.fillText(document.getElementById('domicilio').value, 280, 220);
+  ctx.fillText(document.getElementById('fechaNac').value, 280, 250);
+  ctx.fillText(document.getElementById('fechaOtorg').value, 280, 280);
+  ctx.fillText(document.getElementById('fechaVenc').value, 500, 280);
+
+  // Dibuja firma (escalada cuadrada)
+  if (imgFirma.src) {
+    ctx.drawImage(imgFirma, 500, 320, 200, 60);
+  }
+
+  // Marca de agua
+  const marca = document.getElementById('marcaAgua').value;
+  if (marca) {
+    ctx.save();
+    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.rotate(-Math.PI / 4);
+    ctx.font = 'bold 50px Arial';
+    ctx.fillStyle = 'rgba(150,150,150,0.3)';
+    ctx.textAlign = 'center';
+    ctx.fillText(marca, 0, 0);
+    ctx.restore();
+  }
+});
 </script>
 
 </body>
