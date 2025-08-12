@@ -1,426 +1,143 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Generador Licencia - Subir Plantilla</title>
+<meta charset="UTF-8">
+<title>Generador Licencia</title>
 <style>
-  body{font-family: Arial, Helvetica, sans-serif; background:#f5f7fa; margin:16px;}
-  h1{font-size:18px}
-  .row{display:flex; gap:12px; flex-wrap:wrap;}
-  .col{flex:1 1 300px; min-width:260px;}
-  label{display:block; font-weight:600; margin-top:8px}
-  input[type="text"], input[type="date"]{width:100%; padding:6px; box-sizing:border-box; margin-top:4px}
-  input[type="file"]{margin-top:6px}
-  button{margin-top:12px; padding:10px 14px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer}
-  button:disabled{opacity:0.6; cursor:not-allowed}
-  canvas{display:block; margin-top:12px; border:1px solid #ddd; background:#fff; max-width:100%}
-  small{color:#666}
-  .hint{background:#fff; padding:8px; border-radius:6px; border:1px solid #e0e6ef}
+    body {
+        font-family: Arial, sans-serif;
+        background: #f0f0f0;
+        padding: 20px;
+    }
+    canvas {
+        border: 1px solid #333;
+        display: block;
+        margin-bottom: 20px;
+        max-width: 100%;
+    }
+    .form-group {
+        margin-bottom: 10px;
+    }
+    input[type="text"], input[type="file"] {
+        width: 100%;
+    }
 </style>
 </head>
 <body>
-  <h1>Generador Licencia (sube la plantilla primero)</h1>
 
-  <div class="row">
-    <div class="col hint">
-      <label>1) Subir plantilla (obligatoria)</label>
-      <input id="templateInput" type="file" accept="image/*">
-      <small>Sube la imagen de la plantilla (JPG/PNG). Es obligatoria para continuar.</small>
+<h2>Generador de Licencia Nacional de Conducir</h2>
 
-      <label>2) Foto (obligatoria para descargar)</label>
-      <input id="photoInput" type="file" accept="image/*" disabled>
+<canvas id="licenciaCanvas" width="1093" height="768"></canvas>
 
-      <label>3) Firma (opcional)</label>
-      <input id="sigInput" type="file" accept="image/*" disabled>
+<div class="form-group">
+    <label>Plantilla de licencia:</label>
+    <input type="file" id="plantillaInput" accept="image/*">
+</div>
 
-      <hr>
+<div class="form-group">
+    <label>Apellido:</label>
+    <input type="text" id="apellido">
+</div>
+<div class="form-group">
+    <label>Nombre:</label>
+    <input type="text" id="nombre">
+</div>
+<div class="form-group">
+    <label>Domicilio:</label>
+    <input type="text" id="domicilio">
+</div>
+<div class="form-group">
+    <label>Fecha de Nac.:</label>
+    <input type="text" id="fechaNac">
+</div>
+<div class="form-group">
+    <label>Otorgamiento:</label>
+    <input type="text" id="otorgamiento">
+</div>
+<div class="form-group">
+    <label>Vencimiento:</label>
+    <input type="text" id="vencimiento">
+</div>
+<div class="form-group">
+    <label>N° Licencia:</label>
+    <input type="text" id="nLicencia">
+</div>
+<div class="form-group">
+    <label>Clase:</label>
+    <input type="text" id="clase">
+</div>
+<div class="form-group">
+    <label>Firma (imagen):</label>
+    <input type="file" id="firmaInput" accept="image/*">
+</div>
 
-      <label>Apellido *</label>
-      <input id="apellido" type="text" disabled>
-
-      <label>Nombre *</label>
-      <input id="nombre" type="text" disabled>
-
-      <label>Domicilio *</label>
-      <input id="domicilio" type="text" disabled>
-
-      <label>Fecha de Nacimiento *</label>
-      <input id="fechaNac" type="date" disabled>
-
-      <label>Fecha de Otorgamiento *</label>
-      <input id="fechaOtorga" type="date" disabled>
-
-      <label>Fecha de Vencimiento *</label>
-      <input id="fechaVence" type="date" disabled>
-
-      <label>Nº Licencia *</label>
-      <input id="nlic" type="text" disabled>
-
-      <label>Clase *</label>
-      <input id="clase" type="text" disabled>
-
-      <button id="downloadBtn" disabled>Descargar JPG (8cm x 6cm)</button>
-      <div style="margin-top:8px"><small>* Campos obligatorios (firma opcional)</small></div>
-    </div>
-
-    <div class="col">
-      <div class="hint">
-        <strong>Vista previa</strong>
-        <div id="status" style="margin-top:6px;color:#444">Sube la plantilla para habilitar la vista previa y el resto de campos.</div>
-        <!-- canvas será ajustado dinámicamente según la plantilla -->
-        <canvas id="previewCanvas" width="600" height="450"></canvas>
-      </div>
-    </div>
-  </div>
+<button onclick="dibujarLicencia()">Generar</button>
 
 <script>
-/*
-  Comportamiento:
-  - Pide plantilla primero.
-  - Habilita inputs después de cargar plantilla.
-  - Dibuja preview en canvas (optimizado).
-  - Al descargar genera un canvas HD (945x709) y exporta JPG.
-  - Usa posiciones relativas (porcentaje) definidas en `layout`.
-*/
+const canvas = document.getElementById('licenciaCanvas');
+const ctx = canvas.getContext('2d');
 
-// Layout en porcentajes (ajusta si quieres mover elementos)
-const layout = {
-  // foto: left box
-  photo: { x: 0.0636, y: 0.1836, w: 0.275, h: 0.452 },
-  // firma: right-lower
-  signature: { x: 0.5729, y: 0.72, w: 0.339, h: 0.113 },
-  texts: {
-    licencia: { x: 0.498, y: 0.122, fontPct: 0.06 }, // nº licencia (arriba centro-derecha)
-    apellido: { x: 0.498, y: 0.283, fontPct: 0.04 },
-    nombre: { x: 0.498, y: 0.354, fontPct: 0.05 },
-    domicilio: { x: 0.498, y: 0.435, fontPct: 0.035, maxWidthPct: 0.46 },
-    fechaNac: { x: 0.498, y: 0.505, fontPct: 0.04 },
-    fechaOtorga: { x: 0.498, y: 0.61, fontPct: 0.04 },
-    fechaVence: { x: 0.785, y: 0.61, fontPct: 0.04 },
-    clase: { x: 0.875, y: 0.122, fontPct: 0.10 }
-  }
-};
+let plantillaImg = new Image();
+let firmaImg = null;
 
-// elementos
-const templateInput = document.getElementById('templateInput');
-const photoInput = document.getElementById('photoInput');
-const sigInput = document.getElementById('sigInput');
-
-const apellidoInput = document.getElementById('apellido');
-const nombreInput = document.getElementById('nombre');
-const domicilioInput = document.getElementById('domicilio');
-const fechaNacInput = document.getElementById('fechaNac');
-const fechaOtorgaInput = document.getElementById('fechaOtorga');
-const fechaVenceInput = document.getElementById('fechaVence');
-const nlicInput = document.getElementById('nlic');
-const claseInput = document.getElementById('clase');
-
-const downloadBtn = document.getElementById('downloadBtn');
-const statusEl = document.getElementById('status');
-
-const previewCanvas = document.getElementById('previewCanvas');
-const pctx = previewCanvas.getContext('2d');
-
-let templateImg = null; // Image of template (dataURL)
-let photoImg = null;
-let sigImg = null;
-
-// Helper: enable/disable form inputs
-function setFormEnabled(enabled){
-  [photoInput, sigInput, apellidoInput, nombreInput, domicilioInput, fechaNacInput, fechaOtorgaInput, fechaVenceInput, nlicInput, claseInput, downloadBtn]
-    .forEach(el => { el.disabled = !enabled; });
-}
-
-// format date: YYYY-MM-DD -> "DD MON YYYY" (MON en mayúsculas esp)
-const monthShortES = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DIC'];
-function formatDateForPrint(value){
-  if(!value) return '';
-  // value expected "YYYY-MM-DD"
-  try{
-    const [y,m,d] = value.split('-');
-    const mi = parseInt(m,10) - 1;
-    const mon = monthShortES[mi] || m;
-    return `${String(d).padStart(2,'0')} ${mon} ${y}`;
-  }catch(e){ return value; }
-}
-
-// wrap text
-function wrapText(ctx, text, x, y, maxWidth, lineHeight){
-  if(!text) return;
-  const words = text.split(' ');
-  let line = '';
-  for(let n=0;n<words.length;n++){
-    const testLine = line + (line? ' ' : '') + words[n];
-    const metrics = ctx.measureText(testLine);
-    if(metrics.width > maxWidth && n>0){
-      ctx.fillText(line, x, y);
-      line = words[n];
-      y += lineHeight;
-    } else {
-      line = testLine;
+document.getElementById('plantillaInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            plantillaImg.onload = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(plantillaImg, 0, 0, canvas.width, canvas.height);
+            };
+            plantillaImg.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
     }
-  }
-  ctx.fillText(line, x, y);
-  return y;
-}
-
-// Dibuja imagen recortando para cubrir (cover)
-function drawImageCover(ctx, img, x, y, w, h){
-  if(!img) return;
-  const iw = img.width, ih = img.height;
-  const r = Math.max(w/iw, h/ih); // scale to cover
-  const nw = iw * r, nh = ih * r;
-  const cx = (nw - w) / 2;
-  const cy = (nh - h) / 2;
-  // draw using drawImage with source rect by drawing to an offscreen canvas to crop, or draw directly by scaling and offset
-  // Simpler: compute sx, sy in source coords
-  // But drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh) needs source coords.
-  // Compute source crop in original image:
-  const sw = w / r;
-  const sh = h / r;
-  const sx = Math.max(0, (iw - sw) / 2);
-  const sy = Math.max(0, (ih - sh) / 2);
-  try{
-    ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
-  }catch(e){
-    // fallback
-    ctx.drawImage(img, x, y, w, h);
-  }
-}
-
-// Dibuja vista previa (canvas pequeño)
-function drawPreview(){
-  if(!templateImg) {
-    pctx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
-    statusEl.textContent = 'Sube la plantilla para comenzar.';
-    return;
-  }
-  statusEl.textContent = 'Vista previa (cambios se actualizan en tiempo real)';
-  // canvas already sized to preview dims
-  pctx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
-  pctx.drawImage(templateImg, 0, 0, previewCanvas.width, previewCanvas.height);
-
-  // draw photo
-  const pw = previewCanvas.width, ph = previewCanvas.height;
-  const phArea = layout.photo;
-  const px = Math.round(phArea.x * pw);
-  const py = Math.round(phArea.y * ph);
-  const pwW = Math.round(phArea.w * pw);
-  const pwH = Math.round(phArea.h * ph);
-  if(photoImg){
-    drawImageCover(pctx, photoImg, px, py, pwW, pwH);
-  } else {
-    // optional: draw placeholder rectangle
-    // pctx.strokeStyle = '#ccc'; pctx.strokeRect(px,py,pwW,pwH);
-  }
-
-  // signature
-  const sArea = layout.signature;
-  const sx = Math.round(sArea.x * pw);
-  const sy = Math.round(sArea.y * ph);
-  const sW = Math.round(sArea.w * pw);
-  const sH = Math.round(sArea.h * ph);
-  if(sigImg){
-    drawImageCover(pctx, sigImg, sx, sy, sW, sH);
-  }
-
-  // texts (uppercase)
-  pctx.fillStyle = '#000';
-  pctx.textBaseline = 'top';
-  pctx.textAlign = 'left';
-
-  for(const key in layout.texts){
-    const t = layout.texts[key];
-    let textVal = '';
-    switch(key){
-      case 'licencia': textVal = document.getElementById('nlic').value; break;
-      case 'apellido': textVal = apellidoInput.value; break;
-      case 'nombre': textVal = nombreInput.value; break;
-      case 'domicilio': textVal = domicilioInput.value; break;
-      case 'fechaNac': textVal = formatDateForPrint(fechaNacInput.value); break;
-      case 'fechaOtorga': textVal = formatDateForPrint(fechaOtorgaInput.value); break;
-      case 'fechaVence': textVal = formatDateForPrint(fechaVenceInput.value); break;
-      case 'clase': textVal = claseInput.value; break;
-      default: textVal = ''; break;
-    }
-    textVal = (textVal || '').toString().toUpperCase();
-
-    const fontPx = Math.max(10, Math.round(t.fontPct * pw));
-    pctx.font = `bold ${fontPx}px Arial, sans-serif`;
-
-    const tx = Math.round(t.x * pw);
-    const ty = Math.round(t.y * ph);
-
-    if(key === 'domicilio' && t.maxWidthPct){
-      const maxWidth = Math.round((t.maxWidthPct || 0.45) * pw);
-      const lineH = Math.round(fontPx * 1.15);
-      wrapText(pctx, textVal, tx, ty, maxWidth, lineH);
-    } else {
-      pctx.fillText(textVal, tx, ty);
-    }
-  }
-}
-
-// Cuando suben la plantilla
-templateInput.addEventListener('change', (ev) => {
-  const file = ev.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e){
-    templateImg = new Image();
-    templateImg.onload = function(){
-      // ajustar tamaño del canvas de preview conservando proporción
-      const desiredPreviewWidth = 600; // px (se adapta en móvil)
-      const ar = templateImg.width / templateImg.height;
-      const previewW = desiredPreviewWidth;
-      const previewH = Math.round(previewW / ar);
-      previewCanvas.width = previewW;
-      previewCanvas.height = previewH;
-
-      // habilitar formulario
-      setFormEnabled(true);
-      photoInput.disabled = false;
-      sigInput.disabled = false;
-
-      drawPreview();
-    };
-    templateImg.src = e.target.result; // dataURL
-  };
-  reader.readAsDataURL(file);
 });
 
-// Photo
-photoInput.addEventListener('change', (ev)=>{
-  const f = ev.target.files[0];
-  if(!f) { photoImg = null; drawPreview(); return; }
-  const r = new FileReader();
-  r.onload = function(e){
-    photoImg = new Image();
-    photoImg.onload = drawPreview;
-    photoImg.src = e.target.result;
-  };
-  r.readAsDataURL(f);
+document.getElementById('firmaInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            firmaImg = new Image();
+            firmaImg.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
 });
 
-// Signature
-sigInput.addEventListener('change', (ev)=>{
-  const f = ev.target.files[0];
-  if(!f) { sigImg = null; drawPreview(); return; }
-  const r = new FileReader();
-  r.onload = function(e){
-    sigImg = new Image();
-    sigImg.onload = drawPreview;
-    sigImg.src = e.target.result;
-  };
-  r.readAsDataURL(f);
-});
-
-// inputs update
-[apellidoInput, nombreInput, domicilioInput, fechaNacInput, fechaOtorgaInput, fechaVenceInput, nlicInput, claseInput]
-  .forEach(inp => inp.addEventListener('input', ()=> { inp.value = inp.value.toUpperCase(); drawPreview(); }));
-
-// Descargar en HD (JPG 945x709)
-downloadBtn.addEventListener('click', ()=>{
-  // Validaciones
-  if(!templateImg){
-    alert('Primero sube la plantilla.');
-    return;
-  }
-  if(!photoImg){
-    alert('Debes subir la foto antes de descargar.');
-    return;
-  }
-  // campos obligatorios
-  const required = [
-    {el: apellidoInput, name: 'Apellido'},
-    {el: nombreInput, name: 'Nombre'},
-    {el: domicilioInput, name: 'Domicilio'},
-    {el: fechaNacInput, name: 'Fecha de Nacimiento'},
-    {el: fechaOtorgaInput, name: 'Fecha de Otorgamiento'},
-    {el: fechaVenceInput, name: 'Fecha de Vencimiento'},
-    {el: nlicInput, name: 'N° Licencia'},
-    {el: claseInput, name: 'Clase'}
-  ];
-  for(const r of required){
-    if(!r.el.value || r.el.value.trim()===''){
-      alert('Falta campo obligatorio: ' + r.name);
-      return;
+function dibujarLicencia() {
+    if (!plantillaImg.src) {
+        alert('Primero sube la plantilla de la licencia.');
+        return;
     }
-  }
 
-  const hdW = 945, hdH = 709;
-  const hdCanvas = document.createElement('canvas');
-  hdCanvas.width = hdW; hdCanvas.height = hdH;
-  const hc = hdCanvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(plantillaImg, 0, 0, canvas.width, canvas.height);
 
-  // Dibujar plantilla escalada a HD (se estira para llenar: si quieres preservar proporción, cambiar comportamiento)
-  hc.drawImage(templateImg, 0, 0, hdW, hdH);
+    ctx.font = "bold 28px Arial";
+    ctx.fillStyle = "#000";
+    ctx.textAlign = "left";
 
-  // Draw photo and signature scaled to HD using same relative layout
-  const phArea = layout.photo;
-  const px = Math.round(phArea.x * hdW);
-  const py = Math.round(phArea.y * hdH);
-  const pwW = Math.round(phArea.w * hdW);
-  const pwH = Math.round(phArea.h * hdH);
-  drawImageCover(hc, photoImg, px, py, pwW, pwH);
+    // Coordenadas ajustadas a la imagen que pasaste
+    ctx.fillText(document.getElementById('apellido').value, 260, 210); // Apellido
+    ctx.fillText(document.getElementById('nombre').value, 260, 260);   // Nombre
+    ctx.fillText(document.getElementById('domicilio').value, 260, 310);// Domicilio
+    ctx.fillText(document.getElementById('fechaNac').value, 260, 360); // Fecha nac
+    ctx.fillText(document.getElementById('otorgamiento').value, 260, 410); // Otorgamiento
+    ctx.fillText(document.getElementById('vencimiento').value, 550, 410); // Vencimiento
+    ctx.fillText(document.getElementById('nLicencia').value, 260, 150); // N° Licencia
+    ctx.fillText(document.getElementById('clase').value, 900, 150); // Clase
 
-  const sArea = layout.signature;
-  const sx = Math.round(sArea.x * hdW);
-  const sy = Math.round(sArea.y * hdH);
-  const sW = Math.round(sArea.w * hdW);
-  const sH = Math.round(sArea.h * hdH);
-  if(sigImg) drawImageCover(hc, sigImg, sx, sy, sW, sH);
-
-  // Draw texts scaled to HD
-  hc.fillStyle = '#000';
-  hc.textBaseline = 'top';
-  hc.textAlign = 'left';
-
-  for(const key in layout.texts){
-    const t = layout.texts[key];
-    let textVal = '';
-    switch(key){
-      case 'licencia': textVal = nlicInput.value; break;
-      case 'apellido': textVal = apellidoInput.value; break;
-      case 'nombre': textVal = nombreInput.value; break;
-      case 'domicilio': textVal = domicilioInput.value; break;
-      case 'fechaNac': textVal = formatDateForPrint(fechaNacInput.value); break;
-      case 'fechaOtorga': textVal = formatDateForPrint(fechaOtorgaInput.value); break;
-      case 'fechaVence': textVal = formatDateForPrint(fechaVenceInput.value); break;
-      case 'clase': textVal = claseInput.value; break;
-      default: textVal = ''; break;
+    // Firma
+    if (firmaImg) {
+        const firmaW = 200;
+        const firmaH = 200;
+        ctx.drawImage(firmaImg, 550, 450, firmaW, firmaH);
     }
-    textVal = (textVal || '').toString().toUpperCase();
-    const fontPx = Math.max(12, Math.round(t.fontPct * hdW));
-    hc.font = `bold ${fontPx}px Arial, sans-serif`;
-    const tx = Math.round(t.x * hdW);
-    const ty = Math.round(t.y * hdH);
-
-    if(key === 'domicilio' && t.maxWidthPct){
-      const maxW = Math.round((t.maxWidthPct || 0.46) * hdW);
-      const lineH = Math.round(fontPx * 1.15);
-      wrapText(hc, textVal, tx, ty, maxW, lineH);
-    } else {
-      hc.fillText(textVal, tx, ty);
-    }
-  }
-
-  // Generar JPG y descargar
-  const dataURL = hdCanvas.toDataURL('image/jpeg', 0.95);
-  const link = document.createElement('a');
-  link.href = dataURL;
-  link.download = 'licencia.jpg';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-});
-
-// Inicial: deshabilitar hasta que plantilla cargue
-setFormEnabled(false);
-
-// Mostrar preview vacío
-drawPreview();
+}
 </script>
+
 </body>
 </html>
