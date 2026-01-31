@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Generador de Oficio de Imputación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      padding: 15px;
+    }
+    h2 {
+      text-align: center;
+    }
+    .card {
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 15px;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      background: #003366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>Generador de Oficio de Imputación</h2>
+
+<div class="card">
+  <label>Expediente Nº</label>
+  <input id="expediente">
+
+  <label>Fiscal Interino</label>
+  <input id="fiscal">
+
+  <label>Nombre del Imputado</label>
+  <input id="imputado">
+
+  <label>DNI del Imputado</label>
+  <input id="dniImputado">
+
+  <label>Domicilio del Imputado</label>
+  <input id="domicilio">
+
+  <label>Iniciales de la Víctima</label>
+  <input id="victima">
+
+  <label>Edad de la Víctima</label>
+  <input id="edad" type="number">
+
+  <label>Descripción del hecho</label>
+  <textarea id="hecho" rows="5"></textarea>
+
+  <button onclick="generarPDF()">Generar y Descargar PDF</button>
+</div>
+
+<script>
+  const { jsPDF } = window.jspdf;
+
+  function generarPDF() {
+    const doc = new jsPDF();
+    let y = 20;
+
+    const v = id => document.getElementById(id).value;
+
+    doc.setFont("times", "bold");
+    doc.setFontSize(14);
+    doc.text("OFICIO DE IMPUTACIÓN PENAL", 105, y, { align: "center" });
+
+    y += 15;
+    doc.setFont("times", "normal");
+    doc.setFontSize(11);
+
+    doc.text("EXPTE Nº: " + v("expediente"), 20, y); y += 8;
+    doc.text("Fiscalía de Abusos Sexuales – Ministerio Público Fiscal de Mendoza", 20, y); y += 8;
+    doc.text("Fiscal Interino: " + v("fiscal"), 20, y); y += 12;
+
+    doc.text("IMPUTADO:", 20, y); y += 8;
+    doc.text("Nombre: " + v("imputado"), 25, y); y += 7;
+    doc.text("DNI: " + v("dniImputado"), 25, y); y += 7;
+    doc.text("Domicilio: " + v("domicilio"), 25, y); y += 12;
+
+    doc.text("VÍCTIMA:", 20, y); y += 8;
+    doc.text("Iniciales: " + v("victima"), 25, y); y += 7;
+    doc.text("Edad: " + v("edad") + " años (menor con retraso madurativo)", 25, y); y += 12;
+
+    doc.text("HECHO IMPUTADO:", 20, y); y += 8;
+    const hechoTxt = doc.splitTextToSize(v("hecho"), 170);
+    doc.text(hechoTxt, 20, y);
+
+    y += hechoTxt.length * 7 + 10;
+    doc.text(
+      "CALIFICACIÓN LEGAL: Art. 131 CP (grooming), Art. 128 CP (pornografía infantil), Art. 55 CP, Ley 26.061.",
+      20,
+      y,
+      { maxWidth: 170 }
+    );
+
+    doc.save("Oficio_Imputacion.pdf");
+  }
+</script>
+
+</body>
+</html>
