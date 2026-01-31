@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Generador de Oficio de Imputación</title>
+  <title>Oficio de Imputación – Grooming</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- jsPDF -->
@@ -27,7 +27,7 @@
       margin-top: 10px;
       display: block;
     }
-    input, textarea {
+    input {
       width: 100%;
       padding: 8px;
       margin-top: 4px;
@@ -63,17 +63,11 @@
   <label>DNI del Imputado</label>
   <input id="dniImputado">
 
-  <label>Domicilio del Imputado</label>
-  <input id="domicilio">
-
   <label>Iniciales de la Víctima</label>
   <input id="victima">
 
   <label>Edad de la Víctima</label>
   <input id="edad" type="number">
-
-  <label>Descripción del hecho</label>
-  <textarea id="hecho" rows="5"></textarea>
 
   <button onclick="generarPDF()">Generar y Descargar PDF</button>
 </div>
@@ -101,26 +95,46 @@
 
     doc.text("IMPUTADO:", 20, y); y += 8;
     doc.text("Nombre: " + v("imputado"), 25, y); y += 7;
-    doc.text("DNI: " + v("dniImputado"), 25, y); y += 7;
-    doc.text("Domicilio: " + v("domicilio"), 25, y); y += 12;
+    doc.text("DNI: " + v("dniImputado"), 25, y); y += 12;
 
     doc.text("VÍCTIMA:", 20, y); y += 8;
     doc.text("Iniciales: " + v("victima"), 25, y); y += 7;
-    doc.text("Edad: " + v("edad") + " años (menor con retraso madurativo)", 25, y); y += 12;
+    doc.text(
+      "Edad: " + v("edad") + 
+      " años – menor de edad con retraso madurativo",
+      25,
+      y
+    );
+    y += 14;
 
     doc.text("HECHO IMPUTADO:", 20, y); y += 8;
-    const hechoTxt = doc.splitTextToSize(v("hecho"), 170);
+
+    const hechoFijo = `
+Se imputa al nombrado haber mantenido contacto reiterado con una menor de edad a través de medios digitales, 
+en particular mediante la aplicación de mensajería instantánea WhatsApp, enviando mensajes de contenido sexual 
+explícito y material de carácter pornográfico, con fines sexuales.
+
+Las conductas se desarrollaron aprovechándose de la condición de especial vulnerabilidad de la víctima, 
+quien presenta retraso madurativo, afectando su integridad sexual y su normal desarrollo psicosexual.
+    `;
+
+    const hechoTxt = doc.splitTextToSize(hechoFijo.trim(), 170);
     doc.text(hechoTxt, 20, y);
 
     y += hechoTxt.length * 7 + 10;
+
     doc.text(
-      "CALIFICACIÓN LEGAL: Art. 131 CP (grooming), Art. 128 CP (pornografía infantil), Art. 55 CP, Ley 26.061.",
+      "CALIFICACIÓN LEGAL: Los hechos encuadran prima facie en el delito de grooming, previsto y reprimido por el artículo 131 del Código Penal, en concurso real con el delito previsto en el artículo 128 del mismo cuerpo legal, conforme artículo 55 del Código Penal, todo ello agravado por la especial vulnerabilidad de la víctima (Ley 26.061).",
       20,
       y,
       { maxWidth: 170 }
     );
 
-    doc.save("Oficio_Imputacion.pdf");
+    y += 30;
+    doc.text("Firma:", 20, y);
+    doc.text(v("fiscal"), 20, y + 10);
+
+    doc.save("Oficio_Imputacion_Grooming.pdf");
   }
 </script>
 
